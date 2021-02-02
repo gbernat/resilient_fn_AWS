@@ -1,0 +1,9 @@
+include README.md
+include Dockerfile
+include entrypoint.sh
+include fn_aws/util/*
+include fn_aws/LICENSE
+include doc/*.md
+include doc/screenshots/*
+
+exclude *.bak
