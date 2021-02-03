@@ -6,6 +6,7 @@ import logging
 from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
 from fn_aws.util.helper import AWSHelper
 import json
+import base64
 
 PACKAGE_NAME = "fn_aws"
 
@@ -74,6 +75,9 @@ class FunctionComponent(ResilientComponent):
                 if res['ResponseMetadata']['HTTPStatusCode'] == 200:
 
                     res_json = json.loads(json.dumps(res, default=str))
+                    if 'LogResult' in res_json.keys():
+                        res_json = base64.b64decode(res_json['LogResult']).decode('utf-8')
+
                     success = True
                 else:
                     log.error('Cannot invoke lambda funtion.\n{}\n'.format(str(res)))
