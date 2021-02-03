@@ -11,7 +11,7 @@ PACKAGE_NAME = "fn_aws"
 
 
 class FunctionComponent(ResilientComponent):
-    """Component that implements Resilient function 'aws_ec2_describe_security_group''"""
+    """Component that implements Resilient function 'aws_change_instance_status''"""
 
     def __init__(self, opts):
         """constructor provides access to the configuration options"""
@@ -23,26 +23,26 @@ class FunctionComponent(ResilientComponent):
         """Configuration options have changed, save new values"""
         self.options = opts.get(PACKAGE_NAME, {})
 
-    @function("aws_ec2_describe_security_group")
-    def _aws_ec2_describe_security_group_function(self, event, *args, **kwargs):
+    @function("aws_change_instance_status")
+    def _aws_change_instance_status_function(self, event, *args, **kwargs):
         """Function: None"""
         try:
 
             # Get the wf_instance_id of the workflow this Function was called in
             wf_instance_id = event.message["workflow_instance"]["workflow_instance_id"]
 
-            yield StatusMessage("Starting 'aws_ec2_describe_security_group' running in workflow '{0}'".format(wf_instance_id))
+            yield StatusMessage("Starting 'aws_change_instance_status' running in workflow '{0}'".format(wf_instance_id))
 
             # Get the function parameters:
+            aws_instance_status = self.get_select_param(kwargs.get("aws_instance_status"))  # select, values: "start", "stop", "hibernate", "terminate"
             aws_resource_id = kwargs.get("aws_resource_id")  # text
             aws_region = kwargs.get("aws_region")  # text
-            aws_security_group_filter_name = kwargs.get("aws_security_group_filter_name")['name'] 
             aws_access_key_name = kwargs.get("aws_access_key_name")  # text
 
             log = logging.getLogger(__name__)
+            log.info("aws_instance_status: %s", aws_instance_status)
             log.info("aws_resource_id: %s", aws_resource_id)
             log.info("aws_region: %s", aws_region)
-            log.info("aws_security_group_filter_name: %s", aws_security_group_filter_name)
             log.info("aws_access_key_name: %s", aws_access_key_name)
             yield StatusMessage("Function Inputs OK")
 
@@ -64,24 +64,33 @@ class FunctionComponent(ResilientComponent):
             resources = aws_resource_id.split(',')
 
             try:
-                res = ec2_client.describe_security_groups(Filters=[ {'Name': aws_security_group_filter_name, 'Values': resources} ])
+                if aws_instance_status == 'hibernate' or aws_instance_status == 'stop':
+                    # If hibernate is selected but the instance cannot hibernate successfully, a normal shutdown occurs
+                    res = ec2_client.stop_instances(InstanceIds=resources, Hibernate= (True if aws_instance_status=='hibernate' else False))
+                elif aws_instance_status == 'start':
+                    res = ec2_client.start_instances(InstanceIds=resources)
+                elif aws_instance_status == 'terminate':
+                    res = ec2_client.terminate_instances(InstanceIds=resources)
+                else:
+                    raise ValueError("Status not allowed.\n")
+
                 if res['ResponseMetadata']['HTTPStatusCode'] == 200:
 
-                    res_json = json.loads(json.dumps(res['SecurityGroups'], default=str))
+                    res_json = json.loads(json.dumps(res, default=str))
                     success = True
                 else:
-                    log.error('[ERROR] {}'.format(str(res)))
+                    log.error('Cannot change instances status.\n{}\n'.format(str(res)))
 
             except Exception as e:
-                raise ValueError("Cannot get describe_security_groups.\n Error: {0}".format(e))
+                raise ValueError("Cannot change instances status.\n Error: {0}".format(e))
 
             ##############################################
 
-            yield StatusMessage("Finished 'aws_ec2_describe_security_group' that was running in workflow '{0}'".format(wf_instance_id))
+            yield StatusMessage("Finished 'aws_change_instance_status' that was running in workflow '{0}'".format(wf_instance_id))
 
             results = {
                 "success": success,
-                "securityGroups": res_json
+                "statusInstances": res_json
             }
 
             # Produce a FunctionResult with the results

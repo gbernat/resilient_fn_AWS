@@ -11,7 +11,7 @@ PACKAGE_NAME = "fn_aws"
 
 
 class FunctionComponent(ResilientComponent):
-    """Component that implements Resilient function 'aws_ec2_describe_security_group''"""
+    """Component that implements Resilient function 'aws_ec2_modify_security_groups''"""
 
     def __init__(self, opts):
         """constructor provides access to the configuration options"""
@@ -23,26 +23,26 @@ class FunctionComponent(ResilientComponent):
         """Configuration options have changed, save new values"""
         self.options = opts.get(PACKAGE_NAME, {})
 
-    @function("aws_ec2_describe_security_group")
-    def _aws_ec2_describe_security_group_function(self, event, *args, **kwargs):
-        """Function: None"""
+    @function("aws_ec2_modify_security_groups")
+    def _aws_ec2_modify_security_groups_function(self, event, *args, **kwargs):
+        """Function: Replaces the Security Groups assigned to the Instance for those described in aws_security_groups (can be a list of security group Ids separated by comma)"""
         try:
 
             # Get the wf_instance_id of the workflow this Function was called in
             wf_instance_id = event.message["workflow_instance"]["workflow_instance_id"]
 
-            yield StatusMessage("Starting 'aws_ec2_describe_security_group' running in workflow '{0}'".format(wf_instance_id))
+            yield StatusMessage("Starting 'aws_ec2_modify_security_groups' running in workflow '{0}'".format(wf_instance_id))
 
             # Get the function parameters:
+            aws_security_groups = kwargs.get("aws_security_groups")  # text
             aws_resource_id = kwargs.get("aws_resource_id")  # text
             aws_region = kwargs.get("aws_region")  # text
-            aws_security_group_filter_name = kwargs.get("aws_security_group_filter_name")['name'] 
             aws_access_key_name = kwargs.get("aws_access_key_name")  # text
 
             log = logging.getLogger(__name__)
+            log.info("aws_security_groups: %s", aws_security_groups)
             log.info("aws_resource_id: %s", aws_resource_id)
             log.info("aws_region: %s", aws_region)
-            log.info("aws_security_group_filter_name: %s", aws_security_group_filter_name)
             log.info("aws_access_key_name: %s", aws_access_key_name)
             yield StatusMessage("Function Inputs OK")
 
@@ -56,32 +56,33 @@ class FunctionComponent(ResilientComponent):
             yield StatusMessage("EC2 Client created")
 
 
+            # TODO Input either by sg id or name (add input select parameter "ids or names")
+            # sg_id = ec2_client.describe_security_groups(Filters=[ {'Name': 'group-name', 'Values': ['name_of_sg']} ])['SecurityGroups'][0]['GroupId']
+
+            
             ##############################################
             success = False
-            res_json = {}
 
-            # Validate aws_resource_id in case multiple values (must be a list)
-            resources = aws_resource_id.split(',')
+            # Validate aws_security_groups in case multiple values (must be a list)
+            sgs = aws_security_groups.split(',')
 
             try:
-                res = ec2_client.describe_security_groups(Filters=[ {'Name': aws_security_group_filter_name, 'Values': resources} ])
+                res = ec2_client.modify_instance_attribute(InstanceId=aws_resource_id, Groups=sgs)
                 if res['ResponseMetadata']['HTTPStatusCode'] == 200:
-
-                    res_json = json.loads(json.dumps(res['SecurityGroups'], default=str))
+                    log.info('Security Groups replaced.\n')
                     success = True
                 else:
-                    log.error('[ERROR] {}'.format(str(res)))
+                    log.error('Cannot replace security groups.\n{}\n'.format(str(res)))
 
             except Exception as e:
-                raise ValueError("Cannot get describe_security_groups.\n Error: {0}".format(e))
+                raise ValueError("Cannot replace security groups.\n Error: {0}".format(e))
 
             ##############################################
 
-            yield StatusMessage("Finished 'aws_ec2_describe_security_group' that was running in workflow '{0}'".format(wf_instance_id))
+            yield StatusMessage("Finished 'aws_ec2_modify_security_groups' that was running in workflow '{0}'".format(wf_instance_id))
 
             results = {
-                "success": success,
-                "securityGroups": res_json
+                "success": success
             }
 
             # Produce a FunctionResult with the results

@@ -36,15 +36,19 @@ class FunctionComponent(ResilientComponent):
             # Get the function parameters:
             aws_resource_id = kwargs.get("aws_resource_id")  # text
             aws_region = kwargs.get("aws_region")  # text
+            aws_instances_filter_name = self.get_select_param(kwargs.get("aws_instances_filter_name"))  # select, values: "instance-id", "image-id"
+            aws_access_key_name = kwargs.get("aws_access_key_name")  # text
 
             log = logging.getLogger(__name__)
             log.info("aws_resource_id: %s", aws_resource_id)
             log.info("aws_region: %s", aws_region)
+            log.info("aws_instances_filter_name: %s", aws_instances_filter_name)
+            log.info("aws_access_key_name: %s", aws_access_key_name)
             yield StatusMessage("Function Inputs OK")
 
 
             # Instansiate helper (which gets appconfigs from file)
-            helper = AWSHelper(self.options)    
+            helper = AWSHelper(self.options, aws_access_key_name)    
             yield StatusMessage("Appconfig Settings OK")
 
             # Create EC2 client
@@ -55,14 +59,17 @@ class FunctionComponent(ResilientComponent):
             ##############################################
             success = False
             res_json = {}
+
+            # Validate aws_resource_id in case multiple values (must be a list)
+            resources = aws_resource_id.split(',')
+            
             try:
-                res = ec2_client.describe_instances(InstanceIds=[aws_resource_id])
+                #res = ec2_client.describe_instances(InstanceIds=[resources])
+                res = ec2_client.describe_instances(Filters=[ {'Name': aws_instances_filter_name, 'Values': resources} ])
                 if res['ResponseMetadata']['HTTPStatusCode'] == 200:
                     #pd = res['Reservations'][0]['Instances'][0]
-                    #log.info('[OK] Instance found:\n     ImageId: {}\n     InstanceType: {}\n     LaunchTime: {}\n     AZ: {}\n     PrivateIP: {}\n     PublicIP: {}\n'.format(pd['ImageId'], pd['InstanceType'], str(pd['LaunchTime']), pd['Placement']['AvailabilityZone'], pd['PrivateIpAddress'], pd['PublicIpAddress']))
-                    #log.info('[OK] Instance found:\n     ImageId: {}\n     InstanceType: {}\n     LaunchTime: {}\n     AZ: {}\n'.format(pd['ImageId'], pd['InstanceType'], str(pd['LaunchTime']), pd['Placement']['AvailabilityZone']))
 
-                    res_json = json.loads(json.dumps(res['Reservations'][0], default=str))
+                    res_json = json.loads(json.dumps(res['Reservations'], default=str))
                     success = True
                 else:
                     log.error('[ERROR] {}'.format(str(res)))

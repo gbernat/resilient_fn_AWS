@@ -37,16 +37,18 @@ class FunctionComponent(ResilientComponent):
             aws_resource_id = kwargs.get("aws_resource_id")  # text
             aws_region = kwargs.get("aws_region")  # text
             aws_tag_names = kwargs.get("aws_tag_names")  # text
+            aws_access_key_name = kwargs.get("aws_access_key_name")  # text
 
             log = logging.getLogger(__name__)
             log.info("aws_resource_id: %s", aws_resource_id)
             log.info("aws_region: %s", aws_region)
             log.info("aws_tag_names: %s", aws_tag_names)
+            log.info("aws_access_key_name: %s", aws_access_key_name)
             yield StatusMessage("Function Inputs OK")
 
 
             # Instansiate helper (which gets appconfigs from file)
-            helper = AWSHelper(self.options)    
+            helper = AWSHelper(self.options, aws_access_key_name)    
             yield StatusMessage("Appconfig Settings OK")
 
             # Create EC2 client
