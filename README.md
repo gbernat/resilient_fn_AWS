@@ -90,6 +90,7 @@ Resilient Circuits Components for 'fn_aws'
   | ------ | :------: | ------- | ----------- |
   | **aws_access_key_id** | Yes | `AWS_ACCESS_KEY_ID` | *Enter a description of the config here* |
   | **aws_secret_access_key** | Yes | `AWS_SECRET_ACCESS_KEY` | *Enter a description of the config here* |
+  | **default_region** | Yes | `sa-east-1` | *Enter a description of the config here* |
 
 * **Save** and **Close** the app.config file.
 * [Optional]: Run selftest to test the Integration you configured:

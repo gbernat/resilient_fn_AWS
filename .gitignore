@@ -1,4 +1,4 @@
-/dist
+#/dist
 /temp
 build/
 __pycache__
@@ -17,6 +17,6 @@ resilient_circuits_lockfile
 *.log
 *.log.*
 *.egg-info
-*.tar.gz
+#*.tar.gz
 *.pytest_cache
 *.bak

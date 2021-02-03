@@ -16,17 +16,18 @@
 
 ## Table of Contents
 - [Key Features](#key-features)
-- [Function - AWS: EC2 describe Instance](#function---aws-ec2-describe-instance)
-- [Function - AWS: EC2 change instance status](#function---aws-ec2-change-instance-status)
-- [Function - AWS: EC2 create snapshot](#function---aws-ec2-create-snapshot)
-- [Function - AWS: Lambda invoke function](#function---aws-lambda-invoke-function)
-- [Function - AWS: EC2 describe Security Group](#function---aws-ec2-describe-security-group)
-- [Function - AWS: delete key pair](#function---aws-delete-key-pair)
-- [Function - AWS: EC2 modify security groups](#function---aws-ec2-modify-security-groups)
 - [Function - AWS: create tags](#function---aws-create-tags)
+- [Function - AWS: EC2 describe Instance](#function---aws-ec2-describe-instance)
+- [Function - AWS: EC2 create snapshot](#function---aws-ec2-create-snapshot)
+- [Function - AWS: delete key pair](#function---aws-delete-key-pair)
+- [Function - AWS: EC2 describe Security Group](#function---aws-ec2-describe-security-group)
+- [Function - AWS: Lambda invoke function](#function---aws-lambda-invoke-function)
+- [Function - AWS: EC2 modify security groups](#function---aws-ec2-modify-security-groups)
+- [Function - AWS: EC2 change instance status](#function---aws-ec2-change-instance-status)
 - [Data Table - AWS Instances](#data-table---aws-instances)
 - [Data Table - AWS Security Groups](#data-table---aws-security-groups)
 - [Custom Artifact Types](#custom-artifact-types)
+- [Rules](#rules)
 
 ---
 
@@ -40,18 +41,22 @@
 
 ---
 
-## Function - AWS: EC2 describe Instance
-None
+## Function - AWS: create tags
+Assign Tags to resources. Multiple Tags and resources are allowed. 
+Input multiple resources as: ami-xxx...xxx,i-xxx...xxx.
+If a tag key already exists, the value is overwritten with the new value.
 
- ![screenshot: fn-aws-ec2-describe-instance ](./screenshots/fn-aws-ec2-describe-instance.png)
+ ![screenshot: fn-aws-create-tags ](./screenshots/fn-aws-create-tags.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_region` | `text` | No | `-` | - |
-| `aws_resource_id` | `text` | No | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
+| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_tag_names` | `text` | Yes | `"[{'Key': 'First_Tag', 'Value': 'First Value'}, {'Key': 'Second_Tag', 'Value': 'Second Value'}]"` | - |
 
 </p>
 </details>
@@ -76,7 +81,10 @@ results = {
   <p>
 
   ```python
-  None
+  inputs.aws_resource_id = artifact.value
+inputs.aws_region = 'sa-east-1'
+
+inputs.aws_tag_names = "[{ 'Key': 'source', 'Value': 'Resilient' }, { 'Key': 'security_posture', 'Value': 'quarantine' }]"
   ```
 
   </p>
@@ -86,7 +94,7 @@ results = {
   <p>
 
   ```python
-  None
+  incident.addNote('Tags created')
   ```
 
   </p>
@@ -95,19 +103,21 @@ results = {
 </details>
 
 ---
-## Function - AWS: EC2 change instance status
-None
+## Function - AWS: EC2 describe Instance
+Gets the information of one o more Instance listed in aws_resource_id.
+Searching by Instance Id is default. If 'image-id' is selected in aws_instances_filter_name, and one or more AMI id is entered, the output includes Instance information related to that AMI Id.
 
- ![screenshot: fn-aws-ec2-change-instance-status ](./screenshots/fn-aws-ec2-change-instance-status.png)
+ ![screenshot: fn-aws-ec2-describe-instance ](./screenshots/fn-aws-ec2-describe-instance.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_instance_status` | `select` | No | `-` | - |
-| `aws_region` | `text` | No | `-` | - |
-| `aws_resource_id` | `text` | No | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_instances_filter_name` | `select` | No | `-` | Criteria for searching instances |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
+| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
 
 </p>
 </details>
@@ -132,7 +142,8 @@ results = {
   <p>
 
   ```python
-  None
+  inputs.aws_resource_id = artifact.value
+inputs.aws_region = 'sa-east-1'
   ```
 
   </p>
@@ -142,7 +153,28 @@ results = {
   <p>
 
   ```python
-  None
+  # Processing if the function is a success
+if(results.success):
+  reservations = results.reservations
+  
+  for rsv in reservations:
+    instances = rsv['Instances']
+  
+    for inst in instances:
+      # Add Row
+      row = incident.addRow("aws_instances")
+      row["instanceid"] = inst["InstanceId"]
+      row["imageid"] = inst["ImageId"]
+      row["instancetype"] = inst["InstanceType"]
+      row["keyname"] = inst["KeyName"]
+      row["launchtime"] = inst["LaunchTime"]
+      row["availabilityzone"] = inst["Placement"]["AvailabilityZone"]
+      row["privatednsname"] = inst["PrivateDnsName"]
+      row["publicdnsname"] = inst["PublicDnsName"]
+      row["instance_state"] = inst["State"]["Name"]
+      row["vpcid"] = inst["VpcId"]
+      row["securitygroups"] = ('\n'.join(list(map(lambda x : x['GroupName']+' ('+x['GroupId']+')', inst["SecurityGroups"]))) if "SecurityGroups" in inst.keys() else '')
+      row["tags"] = ('\n'.join(list(map(lambda x : x['Key']+': '+x['Value'], inst["Tags"]))) if "Tags" in inst.keys() else '')
   ```
 
   </p>
@@ -152,7 +184,7 @@ results = {
 
 ---
 ## Function - AWS: EC2 create snapshot
-Create a volume snapshot if aws_resource_id a Volume (vol-xxx..xxx), or an image if it is an Instance id (i-xxx...xxx)
+Creates a volume snapshot if aws_resource_id is a Volume (vol-xxx..xxx), or creates a complete image if it is an Instance Id (i-xxx...xxx)
 
  ![screenshot: fn-aws-ec2-create-snapshot ](./screenshots/fn-aws-ec2-create-snapshot.png)
 
@@ -161,8 +193,9 @@ Create a volume snapshot if aws_resource_id a Volume (vol-xxx..xxx), or an image
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_region` | `text` | No | `-` | - |
-| `aws_resource_id` | `text` | No | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
+| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
 
 </p>
 </details>
@@ -187,7 +220,7 @@ results = {
   <p>
 
   ```python
-  None
+  inputs.aws_resource_id = artifact.value
   ```
 
   </p>
@@ -197,7 +230,8 @@ results = {
   <p>
 
   ```python
-  None
+  if results.success:
+  incident.addNote('AMI from {} successfully created: {}'.format(artifact.value, results.snapshotId))
   ```
 
   </p>
@@ -206,18 +240,20 @@ results = {
 </details>
 
 ---
-## Function - AWS: Lambda invoke function
-None
+## Function - AWS: delete key pair
+Deletes the specified key pair, by removing the public key from Amazon EC2.
+Use with extremely careful.
 
- ![screenshot: fn-aws-lambda-invoke-function ](./screenshots/fn-aws-lambda-invoke-function.png)
+ ![screenshot: fn-aws-delete-key-pair ](./screenshots/fn-aws-delete-key-pair.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_lambda_function_name` | `text` | No | `-` | - |
-| `aws_lambda_payload` | `text` | No | `-` | - |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_key_name` | `text` | Yes | `-` | - |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
 
 </p>
 </details>
@@ -262,7 +298,8 @@ results = {
 
 ---
 ## Function - AWS: EC2 describe Security Group
-None
+Gets the information of one o more Security Group listed in aws_resource_id.
+Searching by Security Group Id is default. Other options are available by changing aws_security_group_filter_name.
 
  ![screenshot: fn-aws-ec2-describe-security-group ](./screenshots/fn-aws-ec2-describe-security-group.png)
 
@@ -271,8 +308,9 @@ None
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_region` | `text` | No | `-` | - |
-| `aws_resource_id` | `text` | No | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
+| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
 | `aws_security_group_filter_name` | `select` | No | `-` | Criteria for searching security groups |
 
 </p>
@@ -298,7 +336,14 @@ results = {
   <p>
 
   ```python
-  None
+  vpc = workflow.properties.instance_data.reservations[0]['Instances'][0]['VpcId']
+
+
+inputs.aws_security_group_filter_name = 'vpc-id'
+inputs.aws_resource_id = vpc
+
+
+
   ```
 
   </p>
@@ -308,7 +353,22 @@ results = {
   <p>
 
   ```python
-  None
+  #incident.addNote(str(results))
+
+# Processing if the function is a success
+if(results.success):
+  sgs = results['securityGroups']
+  
+  for inst in sgs:
+    # Add Row
+    row = incident.addRow("aws_security_groups")
+    
+    row["groupname"] = inst["GroupName"]
+    row["sgdescription"] = inst["Description"]
+    row["sgownerid"] = inst["OwnerId"]
+    row["sggroupid"] = inst["GroupId"]
+    row["vpcid"] = inst["VpcId"]
+
   ```
 
   </p>
@@ -317,18 +377,20 @@ results = {
 </details>
 
 ---
-## Function - AWS: delete key pair
-None
+## Function - AWS: Lambda invoke function
+Invokes synchronously a Lambda function.
 
- ![screenshot: fn-aws-delete-key-pair ](./screenshots/fn-aws-delete-key-pair.png)
+ ![screenshot: fn-aws-lambda-invoke-function ](./screenshots/fn-aws-lambda-invoke-function.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_key_name` | `text` | No | `-` | - |
-| `aws_region` | `text` | No | `-` | - |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_lambda_function_name` | `text` | Yes | `-` | - |
+| `aws_lambda_payload` | `text` | No | `-` | The JSON that you want to provide to your Lambda function as input |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
 
 </p>
 </details>
@@ -353,7 +415,8 @@ results = {
   <p>
 
   ```python
-  None
+  inputs.aws_lambda_function_name = 'my-lambda-function'
+inputs.aws_lambda_payload = '{"key1":"value1","key2":"value2"}'
   ```
 
   </p>
@@ -363,7 +426,7 @@ results = {
   <p>
 
   ```python
-  None
+  incident.addNote(str(results.lambdaResult))
   ```
 
   </p>
@@ -382,9 +445,10 @@ Replaces the Security Groups assigned to the Instance for those described in aws
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_region` | `text` | No | `-` | - |
-| `aws_resource_id` | `text` | No | `-` | Where multiple values are allowed, enter them separated  by commas |
-| `aws_security_groups` | `text` | No | `-` | List of security groups Ids separated by comma to set in the Instance |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
+| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_security_groups` | `text` | Yes | `-` | List of security groups Ids separated by comma to set in the Instance |
 
 </p>
 </details>
@@ -409,7 +473,8 @@ results = {
   <p>
 
   ```python
-  None
+  inputs.aws_resource_id = artifact.value
+inputs.aws_security_groups = 'sg-032bea0e7926abfbc,sg-01e6a74a8527336bb'
   ```
 
   </p>
@@ -419,7 +484,8 @@ results = {
   <p>
 
   ```python
-  None
+  if results.success:
+  incident.addNote('Security Groups for Instance: {} were successfully changed.'.format(artifact.value))
   ```
 
   </p>
@@ -428,20 +494,22 @@ results = {
 </details>
 
 ---
-## Function - AWS: create tags
-Assign Tags to resources. Multiple Tags and resources are allowed. 
-Input multiple resources as: ami-123456,i-789013
+## Function - AWS: EC2 change instance status
+A function to change the state of one or more instances.
+If hibernate is selected but the instances cannot hibernate successfully, a normal shutdown occurs.
+Terminate instances is also allowed (use with extremely careful).
 
- ![screenshot: fn-aws-create-tags ](./screenshots/fn-aws-create-tags.png)
+ ![screenshot: fn-aws-ec2-change-instance-status ](./screenshots/fn-aws-ec2-change-instance-status.png)
 
 <details><summary>Inputs:</summary>
 <p>
 
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
-| `aws_region` | `text` | No | `-` | - |
-| `aws_resource_id` | `text` | No | `-` | Where multiple values are allowed, enter them separated  by commas |
-| `aws_tag_names` | `text` | No | `"[{'Key': 'First_Tag', 'Value': 'First Value'}, {'Key': 'Second_Tag', 'Value': 'Second Value'}]"` | - |
+| `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
+| `aws_instance_status` | `select` | Yes | `-` | - |
+| `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
+| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
 
 </p>
 </details>
@@ -466,7 +534,8 @@ results = {
   <p>
 
   ```python
-  None
+  inputs.aws_resource_id = artifact.value
+#inputs.aws_instance_status = 'stop'
   ```
 
   </p>
@@ -476,7 +545,9 @@ results = {
   <p>
 
   ```python
-  None
+  if results.success:
+  incident.addNote('Status change results: {}'.format(str(results.statusInstances)))
+  
   ```
 
   </p>
@@ -536,6 +607,17 @@ aws_security_groups
 
 ---
 
+## Rules
+| Rule Name | Object | Workflow Triggered |
+| --------- | ------ | ------------------ |
+| Example: AWS Tag instance | artifact | `example_aws_tag_instance_as_quarantined` |
+| Example: AWS Describe Security Groups | artifact | `example_aws_describe_security_groups` |
+| Example: AWS Change Security Groups | artifact | `example_aws_change_security_groups` |
+| Example: AWS Take an AMI snapshot and Terminate | artifact | `example_aws_take_an_ami_snapshot_and_terminate` |
+| Example: AWS Describe instance | artifact | `example_aws_describe_instance` |
+| Example: AWS Invoke lambda function | incident | `example_aws_invoke_lamba_function` |
+
+---
 
 <!--
 ## Inform Resilient Users
