@@ -59,8 +59,6 @@ class FunctionComponent(ResilientComponent):
                 res = ec2_client.describe_instances(InstanceIds=[aws_resource_id])
                 if res['ResponseMetadata']['HTTPStatusCode'] == 200:
                     #pd = res['Reservations'][0]['Instances'][0]
-                    #log.info('[OK] Instance found:\n     ImageId: {}\n     InstanceType: {}\n     LaunchTime: {}\n     AZ: {}\n     PrivateIP: {}\n     PublicIP: {}\n'.format(pd['ImageId'], pd['InstanceType'], str(pd['LaunchTime']), pd['Placement']['AvailabilityZone'], pd['PrivateIpAddress'], pd['PublicIpAddress']))
-                    #log.info('[OK] Instance found:\n     ImageId: {}\n     InstanceType: {}\n     LaunchTime: {}\n     AZ: {}\n'.format(pd['ImageId'], pd['InstanceType'], str(pd['LaunchTime']), pd['Placement']['AvailabilityZone']))
 
                     res_json = json.loads(json.dumps(res['Reservations'][0], default=str))
                     success = True

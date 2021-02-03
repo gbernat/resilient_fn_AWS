@@ -11,7 +11,7 @@ PACKAGE_NAME = "fn_aws"
 
 
 class FunctionComponent(ResilientComponent):
-    """Component that implements Resilient function 'aws_lambda_invoke_function''"""
+    """Component that implements Resilient function 'aws_ec2_modify_security_groups''"""
 
     def __init__(self, opts):
         """constructor provides access to the configuration options"""
@@ -23,24 +23,24 @@ class FunctionComponent(ResilientComponent):
         """Configuration options have changed, save new values"""
         self.options = opts.get(PACKAGE_NAME, {})
 
-    @function("aws_lambda_invoke_function")
-    def _aws_lambda_invoke_function_function(self, event, *args, **kwargs):
-        """Function: None"""
+    @function("aws_ec2_modify_security_groups")
+    def _aws_ec2_modify_security_groups_function(self, event, *args, **kwargs):
+        """Function: Replaces the Security Groups assigned to the Instance for those described in aws_security_groups (can be a list of security group Ids separated by comma)"""
         try:
 
             # Get the wf_instance_id of the workflow this Function was called in
             wf_instance_id = event.message["workflow_instance"]["workflow_instance_id"]
 
-            yield StatusMessage("Starting 'aws_lambda_invoke_function' running in workflow '{0}'".format(wf_instance_id))
+            yield StatusMessage("Starting 'aws_ec2_modify_security_groups' running in workflow '{0}'".format(wf_instance_id))
 
             # Get the function parameters:
-            aws_lambda_payload = kwargs.get("aws_lambda_payload")  # text
-            aws_lambda_function_name = kwargs.get("aws_lambda_function_name")  # text
+            aws_security_groups = kwargs.get("aws_security_groups")  # text
+            aws_resource_id = kwargs.get("aws_resource_id")  # text
             aws_region = kwargs.get("aws_region")  # text
 
             log = logging.getLogger(__name__)
-            log.info("aws_lambda_payload: %s", aws_lambda_payload)
-            log.info("aws_lambda_function_name: %s", aws_lambda_function_name)
+            log.info("aws_security_groups: %s", aws_security_groups)
+            log.info("aws_resource_id: %s", aws_resource_id)
             log.info("aws_region: %s", aws_region)
             yield StatusMessage("Function Inputs OK")
 
@@ -49,43 +49,38 @@ class FunctionComponent(ResilientComponent):
             helper = AWSHelper(self.options)    
             yield StatusMessage("Appconfig Settings OK")
 
-            # Create Lambda client
-            lambda_client = helper.get_client('lambda', aws_region)
-            yield StatusMessage("Lambda Client created")
+            # Create EC2 client
+            ec2_client = helper.get_client('ec2', aws_region)
+            yield StatusMessage("EC2 Client created")
 
 
+            # TODO Input either by sg id or name (add input boolean paramenter "ids or names")
+            # sg_id = ec2_client.describe_security_groups(Filters=[ {'Name': 'group-name', 'Values': [isolation_security_groups[1]]} ])['SecurityGroups'][0]['GroupId']
+
+            
             ##############################################
             success = False
-            res_json = {}
 
-            # Validate aws_tag_names format and convert to bytes
-            if aws_lambda_payload is None or aws_lambda_payload == '':
-                event = {}
-            else:
-                try:
-                    event = json.dumps(json.loads(aws_lambda_payload), default=str).encode('utf-8')
-                except Exception as e:
-                    raise ValueError("Illegal format for aws_lambda_payload.\n Error: {0}".format(e))
+            # Validate aws_security_groups in case multiple values (must be a list)
+            sgs = aws_security_groups.split(',')
 
             try:
-                res = lambda_client.invoke(FunctionName=aws_lambda_function_name, LogType='Tail', Payload=event)
+                res = ec2_client.modify_instance_attribute(InstanceId=aws_resource_id, Groups=sgs)
                 if res['ResponseMetadata']['HTTPStatusCode'] == 200:
-
-                    res_json = json.loads(json.dumps(res, default=str))
+                    log.info('Security Groups replaced.\n')
                     success = True
                 else:
-                    log.error('Cannot invoke lambda funtion.\n{}\n'.format(str(res)))
+                    log.error('Cannot replace security groups.\n{}\n'.format(str(res)))
 
             except Exception as e:
-                raise ValueError("Cannot invoke lambda function.\n Error: {0}".format(e))
+                raise ValueError("Cannot replace security groups.\n Error: {0}".format(e))
 
             ##############################################
 
-            yield StatusMessage("Finished 'aws_lambda_invoke_function' that was running in workflow '{0}'".format(wf_instance_id))
+            yield StatusMessage("Finished 'aws_ec2_modify_security_groups' that was running in workflow '{0}'".format(wf_instance_id))
 
             results = {
-                "success": success,
-                "lambdaResult": res_json
+                "success": success
             }
 
             # Produce a FunctionResult with the results
