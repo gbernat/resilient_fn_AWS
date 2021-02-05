@@ -41,7 +41,7 @@
 -->
 **Resilient Circuits Components for 'fn_aws'**
 
- ![screenshot: main](./doc/screenshots/functions.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/functions.PNG)
 
 IBM Resilient integration with AWS.
 Ability to orchestrate with AWS in information gathering activities such as getting  data from EC2 Instances or Security Groups, as well as performing actions like stopping/terminating EC2 Instances, creating snapshots, assigning security groups, tagging objects, deleting key pairs and execution of Lambda functions.
@@ -116,7 +116,7 @@ The use of specific credentials (access keys) in each action is allowed if requi
 -->
 * Import the Data Tables and Custom Fields like the screenshot below:
 
-  ![screenshot: custom_layouts](./doc/screenshots/addingTables.png)
+  ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/addingTables.PNG)
 
 ---
 
