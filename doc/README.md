@@ -52,7 +52,7 @@ Assign Tags to resources. Multiple Tags and resources are allowed.
 Input multiple resources as: ami-xxx...xxx,i-xxx...xxx.
 If a tag key already exists, the value is overwritten with the new value.
 
- ![screenshot: fn-aws-create-tags ](./screenshots/wfTag.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/wfTag.PNG)
  
 #### IAM permissions required:
 * ec2:CreateTags
@@ -112,7 +112,7 @@ inputs.aws_tag_names = "[{ 'Key': 'source', 'Value': 'Resilient' }, { 'Key': 'se
 Gets the information of one o more Instance listed in aws_resource_id.
 Searching by Instance Id is default. If 'image-id' is selected in aws_instances_filter_name, and one or more AMI id is entered, the output includes Instance information related to that AMI Id.
 
- ![screenshot: fn-aws-ec2-describe-instance ](./screenshots/wfDesribeInstance.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/wfDesribeInstance.PNG)
 
 #### IAM permissions required:
 * ec2:DescribeInstances
@@ -420,7 +420,7 @@ results = {
 Gets the information of one o more Security Group listed in aws_resource_id.
 Searching by Security Group Id is default. Other options are available by changing aws_security_group_filter_name.
 
- ![screenshot: fn-aws-ec2-describe-security-group ](./screenshots/wfDescribeSecurityGroups.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/wfDescribeSecurityGroups.PNG)
 
 #### IAM permissions required:
 * ec2:DescribeSecurityGroups
@@ -538,7 +538,7 @@ Invokes synchronously a Lambda function.<br>
 If the function expects an input event, enter it as json in 'aws_lamdba_payload' input field.<br>
 If your Lambda function has logs output, the content of 'LogResult' of the lambda API invoke is return in results, otherwise it is return the entire response of the API for you to decide wich information is relevant (see API documentation: [invoke](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_ResponseSyntax))
 
- ![screenshot: fn-aws-lambda-invoke-function ](./screenshots/wfInvokeLambda.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/wfInvokeLambda.PNG)
 
 #### IAM permissions required:
 * lambda:InvokeFunction
@@ -665,7 +665,7 @@ A function to change the state of one or more instances.
 If hibernate is selected but the instances cannot hibernate successfully, a normal shutdown occurs.
 Terminate instances is also allowed (use with extremely careful).
 
- ![screenshot: fn-aws-ec2-change-instance-status ](./screenshots/wfSnapshotAndHibernate.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/wfSnapshotAndHibernate.PNG)
 
 #### IAM permissions required:
 * ec2:StopInstances
@@ -757,7 +757,7 @@ results = {
 
 ## Data Table - AWS Instances
 
- ![screenshot: dt-aws-instances](./screenshots/tableAWSInstancesCapture.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/tableAWSInstancesCapture.PNG)
 
 #### API Name:
 aws_instances
@@ -781,7 +781,7 @@ aws_instances
 ---
 ## Data Table - AWS Security Groups
 
- ![screenshot: dt-aws-security-groups](./screenshots/tableSecurityGroups.png)
+ ![](https://github.com/gbernat/resilient_fn_AWS/blob/master/doc/screenshots/tableSecurityGroups.PNG)
 
 #### API Name:
 aws_security_groups
