@@ -35,9 +35,15 @@
 <!--
   List the Key Features of the Integration
 -->
-* Key Feature 1
-* Key Feature 2
-* Key Feature 3
+* Retrieve comprehensive information about AWS EC2 instances and security groups affected by a security incident.
+* Multiple search criteria, and many objects can be queried at once.
+* Create tags for AWS resources.
+* Ability to create AMI copies of an Instance, and Volume snapshots.
+* Replace the assigned security groups of an instance.
+* Start, Stop, Hibernate o Terminate one or more instances.
+* Delete compromised key pairs.
+* Execute Lambda functions synchronously, whether with input event or not.
+
 
 ---
 
@@ -46,7 +52,10 @@ Assign Tags to resources. Multiple Tags and resources are allowed.
 Input multiple resources as: ami-xxx...xxx,i-xxx...xxx.
 If a tag key already exists, the value is overwritten with the new value.
 
- ![screenshot: fn-aws-create-tags ](./screenshots/fn-aws-create-tags.png)
+ ![screenshot: fn-aws-create-tags ](./screenshots/wfTag.png)
+ 
+#### IAM permissions required:
+* ec2:CreateTags
 
 <details><summary>Inputs:</summary>
 <p>
@@ -65,11 +74,7 @@ If a tag key already exists, the value is overwritten with the new value.
 <p>
 
 ```python
-results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
-}
+results = {'success': True} 
 ```
 
 </p>
@@ -107,7 +112,10 @@ inputs.aws_tag_names = "[{ 'Key': 'source', 'Value': 'Resilient' }, { 'Key': 'se
 Gets the information of one o more Instance listed in aws_resource_id.
 Searching by Instance Id is default. If 'image-id' is selected in aws_instances_filter_name, and one or more AMI id is entered, the output includes Instance information related to that AMI Id.
 
- ![screenshot: fn-aws-ec2-describe-instance ](./screenshots/fn-aws-ec2-describe-instance.png)
+ ![screenshot: fn-aws-ec2-describe-instance ](./screenshots/wfDesribeInstance.png)
+
+#### IAM permissions required:
+* ec2:DescribeInstances
 
 <details><summary>Inputs:</summary>
 <p>
@@ -127,9 +135,134 @@ Searching by Instance Id is default. If 'image-id' is selected in aws_instances_
 
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+    "success": True,
+    "reservations": [
+        {
+            "Groups": [],
+            "Instances": [
+                {
+                    "AmiLaunchIndex": 0,
+                    "ImageId": "",
+                    "InstanceId": "",
+                    "InstanceType": "",
+                    "KeyName": "",
+                    "LaunchTime": "",
+                    "Monitoring": {
+                        "State": ""
+                    },
+                    "Placement": {
+                        "AvailabilityZone": "",
+                        "GroupName": "",
+                        "Tenancy": ""
+                    },
+                    "PrivateDnsName": "",
+                    "PrivateIpAddress": "",
+                    "ProductCodes": [],
+                    "PublicDnsName": "",
+                    "State": {
+                        "Code": 80,
+                        "Name": ""
+                    },
+                    "StateTransitionReason": "",
+                    "SubnetId": "",
+                    "VpcId": "",
+                    "Architecture": "",
+                    "BlockDeviceMappings": [
+                        {
+                            "DeviceName": "",
+                            "Ebs": {
+                                "AttachTime": "",
+                                "DeleteOnTermination": ,
+                                "Status": "",
+                                "VolumeId": ""
+                            }
+                        }
+                    ],
+                    "ClientToken": "",
+                    "EbsOptimized": ,
+                    "EnaSupport": ,
+                    "Hypervisor": "",
+                    "NetworkInterfaces": [
+                        {
+                            "Attachment": {
+                                "AttachTime": "",
+                                "AttachmentId": "",
+                                "DeleteOnTermination": ,
+                                "DeviceIndex": 0,
+                                "Status": ""
+                            },
+                            "Description": "",
+                            "Groups": [
+                                {
+                                    "GroupName": "",
+                                    "GroupId": ""
+                                }
+                            ],
+                            "Ipv6Addresses": [],
+                            "MacAddress": "",
+                            "NetworkInterfaceId": "",
+                            "OwnerId": "",
+                            "PrivateDnsName": "",
+                            "PrivateIpAddress": "",
+                            "PrivateIpAddresses": [
+                                {
+                                    "Primary": ,
+                                    "PrivateDnsName": "",
+                                    "PrivateIpAddress": ""
+                                }
+                            ],
+                            "SourceDestCheck": ,
+                            "Status": "",
+                            "SubnetId": "",
+                            "VpcId": "",
+                            "InterfaceType": ""
+                        }
+                    ],
+                    "RootDeviceName": "",
+                    "RootDeviceType": "",
+                    "SecurityGroups": [
+                        {
+                            "GroupName": "",
+                            "GroupId": ""
+                        }
+                    ],
+                    "SourceDestCheck": ,
+                    "StateReason": {
+                        "Code": "",
+                        "Message": ""
+                    },
+                    "Tags": [
+                        {
+                            "Key": "",
+                            "Value": ""
+                        }
+                    ],
+                    "VirtualizationType": "",
+                    "CpuOptions": {
+                        "CoreCount": 1,
+                        "ThreadsPerCore": 1
+                    },
+                    "CapacityReservationSpecification": {
+                        "CapacityReservationPreference": ""
+                    },
+                    "HibernationOptions": {
+                        "Configured": 
+                    },
+                    "MetadataOptions": {
+                        "State": "",
+                        "HttpTokens": "",
+                        "HttpPutResponseHopLimit": 1,
+                        "HttpEndpoint": ""
+                    },
+                    "EnclaveOptions": {
+                        "Enabled": 
+                    }
+                }
+            ],
+            "OwnerId": "",
+            "ReservationId": ""
+        }
+    ]
 }
 ```
 
@@ -186,7 +319,9 @@ if(results.success):
 ## Function - AWS: EC2 create snapshot
 Creates a volume snapshot if aws_resource_id is a Volume (vol-xxx..xxx), or creates a complete image if it is an Instance Id (i-xxx...xxx)
 
- ![screenshot: fn-aws-ec2-create-snapshot ](./screenshots/fn-aws-ec2-create-snapshot.png)
+#### IAM permissions required:
+* ec2:CreateSnapshot
+* ec2:CreateImage
 
 <details><summary>Inputs:</summary>
 <p>
@@ -195,7 +330,7 @@ Creates a volume snapshot if aws_resource_id is a Volume (vol-xxx..xxx), or crea
 | ---- | :--: | :------: | ------- | ------- |
 | `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
 | `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
-| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_resource_id` | `text` | Yes | `For Volume snapshot enter: vol-xx..xx. To create AMI from Instance enter: i-xx..xx` | Where multiple values are allowed, enter them separated  by commas |
 
 </p>
 </details>
@@ -204,11 +339,7 @@ Creates a volume snapshot if aws_resource_id is a Volume (vol-xxx..xxx), or crea
 <p>
 
 ```python
-results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
-}
+results = {'success': True, 'snapshotId': 'ami-xx..xx'}
 ```
 
 </p>
@@ -242,9 +373,12 @@ results = {
 ---
 ## Function - AWS: delete key pair
 Deletes the specified key pair, by removing the public key from Amazon EC2.
-Use with extremely careful.
+Use with extremely careful.<br>
+The output shows the status prior to deletion.
 
- ![screenshot: fn-aws-delete-key-pair ](./screenshots/fn-aws-delete-key-pair.png)
+#### IAM permissions required:
+* ec2:DeleteKeyPair
+* ec2:DescribeKeyPairs
 
 <details><summary>Inputs:</summary>
 <p>
@@ -252,7 +386,7 @@ Use with extremely careful.
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
 | `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
-| `aws_key_name` | `text` | Yes | `-` | - |
+| `aws_key_name` | `text` | Yes | `frontend_dev` | key name |
 | `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
 
 </p>
@@ -263,37 +397,22 @@ Use with extremely careful.
 
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+    "success": True,
+    "deletedKeyPair": {
+        "KeyPairId": "key-xx..xx",
+        "KeyFingerprint": "57:::::::::::::::::::52",
+        "KeyName": "frontend_dev",
+        "Tags": [
+            {
+                "Key": "origin",
+                "Value": "resilient"
+            }
+        ]
+    }
 }
 ```
 
 </p>
-</details>
-
-<details><summary>Workflows</summary>
-
-  <details><summary>Example Pre-Process Script:</summary>
-  <p>
-
-  ```python
-  None
-  ```
-
-  </p>
-  </details>
-
-  <details><summary>Example Post-Process Script:</summary>
-  <p>
-
-  ```python
-  None
-  ```
-
-  </p>
-  </details>
-
 </details>
 
 ---
@@ -301,7 +420,10 @@ results = {
 Gets the information of one o more Security Group listed in aws_resource_id.
 Searching by Security Group Id is default. Other options are available by changing aws_security_group_filter_name.
 
- ![screenshot: fn-aws-ec2-describe-security-group ](./screenshots/fn-aws-ec2-describe-security-group.png)
+ ![screenshot: fn-aws-ec2-describe-security-group ](./screenshots/wfDescribeSecurityGroups.png)
+
+#### IAM permissions required:
+* ec2:DescribeSecurityGroups
 
 <details><summary>Inputs:</summary>
 <p>
@@ -310,8 +432,8 @@ Searching by Security Group Id is default. Other options are available by changi
 | ---- | :--: | :------: | ------- | ------- |
 | `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
 | `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
-| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
-| `aws_security_group_filter_name` | `select` | No | `-` | Criteria for searching security groups |
+| `aws_resource_id` | `text` | Yes | `-` | For multiple resources searching, enter them separated  by commas |
+| `aws_security_group_filter_name` | `select` | No | `vpc-id / group-id / group-name` | Criteria for searching security groups |
 
 </p>
 </details>
@@ -321,9 +443,44 @@ Searching by Security Group Id is default. Other options are available by changi
 
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+    "success": True,
+    "securityGroups": [
+        {
+            "Description": "",
+            "GroupName": "",
+            "IpPermissions": [
+                {
+                    "FromPort": ,
+                    "IpProtocol": "",
+                    "IpRanges": [
+                        {
+                            "CidrIp": ""
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": [],
+                    "ToPort": ,
+                    "UserIdGroupPairs": []
+                }
+            ],
+            "OwnerId": "",
+            "GroupId": "",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "",
+                    "IpRanges": [
+                        {
+                            "CidrIp": ""
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": [],
+                    "UserIdGroupPairs": []
+                }
+            ],
+            "VpcId": ""
+        }
+    ]
 }
 ```
 
@@ -353,7 +510,6 @@ inputs.aws_resource_id = vpc
   <p>
 
   ```python
-  #incident.addNote(str(results))
 
 # Processing if the function is a success
 if(results.success):
@@ -378,9 +534,14 @@ if(results.success):
 
 ---
 ## Function - AWS: Lambda invoke function
-Invokes synchronously a Lambda function.
+Invokes synchronously a Lambda function.<br>
+If the function expects an input event, enter it as json in 'aws_lamdba_payload' input field.<br>
+If your Lambda function has logs output, the content of 'LogResult' of the lambda API invoke is return in results, otherwise it is return the entire response of the API for you to decide wich information is relevant (see API documentation: [invoke](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_ResponseSyntax))
 
- ![screenshot: fn-aws-lambda-invoke-function ](./screenshots/fn-aws-lambda-invoke-function.png)
+ ![screenshot: fn-aws-lambda-invoke-function ](./screenshots/wfInvokeLambda.png)
+
+#### IAM permissions required:
+* lambda:InvokeFunction
 
 <details><summary>Inputs:</summary>
 <p>
@@ -388,8 +549,8 @@ Invokes synchronously a Lambda function.
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
 | `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
-| `aws_lambda_function_name` | `text` | Yes | `-` | - |
-| `aws_lambda_payload` | `text` | No | `-` | The JSON that you want to provide to your Lambda function as input |
+| `aws_lambda_function_name` | `text` | Yes | `-` | The lambda function name to invoke |
+| `aws_lambda_payload` | `text` | No | `-` | The JSON that you want to provide to your Lambda function as input if needed |
 | `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
 
 </p>
@@ -400,9 +561,15 @@ Invokes synchronously a Lambda function.
 
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+    "success": True,
+    "lambdaResult": "START RequestId: xx..xx Version: $LATEST\n
+    Received event: {}\n
+    ...
+    lambda funcion output
+    ...
+    END RequestId: xx..xx\n
+    REPORT RequestId: xx..xx\tDuration: 3051.58 ms\tBilled Duration: 3052 ms\t
+    Memory Size: 1024 MB\tMax Memory Used: 100 MB\tInit Duration: 585.11 ms\t\n"
 }
 ```
 
@@ -438,7 +605,8 @@ inputs.aws_lambda_payload = '{"key1":"value1","key2":"value2"}'
 ## Function - AWS: EC2 modify security groups
 Replaces the Security Groups assigned to the Instance for those described in aws_security_groups (can be a list of security group Ids separated by comma)
 
- ![screenshot: fn-aws-ec2-modify-security-groups ](./screenshots/fn-aws-ec2-modify-security-groups.png)
+#### IAM permissions required:
+* ec2:ModifyInstanceAttribute
 
 <details><summary>Inputs:</summary>
 <p>
@@ -448,7 +616,7 @@ Replaces the Security Groups assigned to the Instance for those described in aws
 | `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
 | `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
 | `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
-| `aws_security_groups` | `text` | Yes | `-` | List of security groups Ids separated by comma to set in the Instance |
+| `aws_security_groups` | `text` | Yes | `sg-03..bc,sg-01..bb` | List of security groups Ids separated by comma to set in the Instance |
 
 </p>
 </details>
@@ -458,9 +626,7 @@ Replaces the Security Groups assigned to the Instance for those described in aws
 
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+    "success": True
 }
 ```
 
@@ -474,7 +640,7 @@ results = {
 
   ```python
   inputs.aws_resource_id = artifact.value
-inputs.aws_security_groups = 'sg-032bea0e7926abfbc,sg-01e6a74a8527336bb'
+inputs.aws_security_groups = 'sg-032..bc,sg-01..bb'
   ```
 
   </p>
@@ -499,7 +665,12 @@ A function to change the state of one or more instances.
 If hibernate is selected but the instances cannot hibernate successfully, a normal shutdown occurs.
 Terminate instances is also allowed (use with extremely careful).
 
- ![screenshot: fn-aws-ec2-change-instance-status ](./screenshots/fn-aws-ec2-change-instance-status.png)
+ ![screenshot: fn-aws-ec2-change-instance-status ](./screenshots/wfSnapshotAndHibernate.png)
+
+#### IAM permissions required:
+* ec2:StopInstances
+* ec2:TerminateInstances
+* ec2:StartInstances
 
 <details><summary>Inputs:</summary>
 <p>
@@ -507,9 +678,9 @@ Terminate instances is also allowed (use with extremely careful).
 | Name | Type | Required | Example | Tooltip |
 | ---- | :--: | :------: | ------- | ------- |
 | `aws_access_key_name` | `text` | No | `-` | OPTIONAL to use different access key than default's. If not present, "aws_access_key_id" and "aws_secret_access_key" pair from app.config are used. |
-| `aws_instance_status` | `select` | Yes | `-` | - |
+| `aws_instance_status` | `select` | Yes | `hibernate / stop / start / terminate` | - |
 | `aws_region` | `text` | No | `-` | If not present, "default_region" region from app.config is used |
-| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated  by commas |
+| `aws_resource_id` | `text` | Yes | `-` | Where multiple values are allowed, enter them separated by commas |
 
 </p>
 </details>
@@ -519,9 +690,36 @@ Terminate instances is also allowed (use with extremely careful).
 
 ```python
 results = {
-    # TODO: Copy and paste an example of the Function Output within this code block.
-    # To view the output of a Function, run resilient-circuits in DEBUG mode and invoke the Function. 
-    # The Function results will be printed in the logs: "resilient-circuits run --loglevel=DEBUG"
+    "success": True,
+    "statusInstances": {
+        "StoppingInstances": [
+            {
+                "CurrentState": {
+                    "Code": 64,
+                    "Name": "stopping"
+                },
+                "InstanceId": "",
+                "PreviousState": {
+                    "Code": 16,
+                    "Name": "running"
+                }
+            }
+        ],
+        "ResponseMetadata": {
+            "RequestId": "",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {
+                "x-amzn-requestid": "",
+                "cache-control": "",
+                "strict-transport-security": "",
+                "content-type": "",
+                "content-length": "",
+                "date": "",
+                "server": ""
+            },
+            "RetryAttempts": 0
+        }
+    }
 }
 ```
 
@@ -535,7 +733,7 @@ results = {
 
   ```python
   inputs.aws_resource_id = artifact.value
-#inputs.aws_instance_status = 'stop'
+  inputs.aws_instance_status = 'stop'
   ```
 
   </p>
@@ -559,51 +757,51 @@ results = {
 
 ## Data Table - AWS Instances
 
- ![screenshot: dt-aws-instances](./screenshots/dt-aws-instances.png)
+ ![screenshot: dt-aws-instances](./screenshots/tableAWSInstancesCapture.png)
 
 #### API Name:
 aws_instances
 
 #### Columns:
-| Column Name | API Access Name | Type | Tooltip |
-| ----------- | --------------- | ---- | ------- |
-| AvailabilityZone | `availabilityzone` | `text` | - |
-| ImageId | `imageid` | `text` | - |
-| State | `instance_state` | `text` | - |
-| InstanceId | `instanceid` | `text` | - |
-| InstanceType | `instancetype` | `text` | - |
-| KeyName | `keyname` | `text` | - |
-| LaunchTime | `launchtime` | `text` | - |
-| PrivateDnsName | `privatednsname` | `text` | - |
-| PublicDnsName | `publicdnsname` | `text` | - |
-| SecurityGroups | `securitygroups` | `textarea` | - |
-| Tags | `tags` | `textarea` | - |
-| VpcId | `vpcid` | `text` | - |
+| Column Name | API Access Name | Type |
+| ----------- | --------------- | ---- |
+| AvailabilityZone | `availabilityzone` | `text` |
+| ImageId | `imageid` | `text` |
+| State | `instance_state` | `text` |
+| InstanceId | `instanceid` | `text` |
+| InstanceType | `instancetype` | `text` |
+| KeyName | `keyname` | `text` |
+| LaunchTime | `launchtime` | `text` |
+| PrivateDnsName | `privatednsname` | `text` |
+| PublicDnsName | `publicdnsname` | `text` |
+| SecurityGroups | `securitygroups` | `textarea` |
+| Tags | `tags` | `textarea` |
+| VpcId | `vpcid` | `text` |
 
 ---
 ## Data Table - AWS Security Groups
 
- ![screenshot: dt-aws-security-groups](./screenshots/dt-aws-security-groups.png)
+ ![screenshot: dt-aws-security-groups](./screenshots/tableSecurityGroups.png)
 
 #### API Name:
 aws_security_groups
 
 #### Columns:
-| Column Name | API Access Name | Type | Tooltip |
-| ----------- | --------------- | ---- | ------- |
-| GroupName | `groupname` | `text` | - |
-| Description | `sgdescription` | `text` | - |
-| GroupId | `sggroupid` | `text` | - |
-| OwnerID | `sgownerid` | `text` | - |
-| VpcId | `vpcid` | `text` | - |
+| Column Name | API Access Name | Type |
+| ----------- | --------------- | ---- |
+| GroupName | `groupname` | `text` |
+| Description | `sgdescription` | `text` |
+| GroupId | `sggroupid` | `text` |
+| OwnerID | `sgownerid` | `text` |
+| VpcId | `vpcid` | `text` |
 
 ---
 
 
 ## Custom Artifact Types
-| Display Name | API Access Name | Description |
-| ------------ | --------------- | ----------- |
-| AWS Instance ID | `aws_instance_id` |  |
+| Display Name | API Access Name |
+| ------------ | --------------- |
+| AWS Instance ID | `aws_instance_id` |
 
 ---
 

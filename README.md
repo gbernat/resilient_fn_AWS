@@ -41,9 +41,11 @@
 -->
 **Resilient Circuits Components for 'fn_aws'**
 
- ![screenshot: main](./doc/screenshots/main.png)
+ ![screenshot: main](./doc/screenshots/functions.png)
 
-Resilient Circuits Components for 'fn_aws'
+IBM Resilient integration with AWS.
+Ability to orchestrate with AWS in information gathering activities such as getting  data from EC2 Instances or Security Groups, as well as performing actions like stopping/terminating EC2 Instances, creating snapshots, assigning security groups, tagging objects, deleting key pairs and execution of Lambda functions.
+The use of specific credentials (access keys) in each action is allowed if required.
 
 ---
 
@@ -88,9 +90,13 @@ Resilient Circuits Components for 'fn_aws'
   ```
   | Config | Required | Example | Description |
   | ------ | :------: | ------- | ----------- |
-  | **aws_access_key_id** | Yes | `AWS_ACCESS_KEY_ID` | *Enter a description of the config here* |
-  | **aws_secret_access_key** | Yes | `AWS_SECRET_ACCESS_KEY` | *Enter a description of the config here* |
-  | **default_region** | Yes | `sa-east-1` | *Enter a description of the config here* |
+  | **aws_access_key_id** | Yes | `AWS_ACCESS_KEY_ID` | *Default AWS credentials to be used* |
+  | **aws_secret_access_key** | Yes | `AWS_SECRET_ACCESS_KEY` |  |
+  | **[another]_aws_access_key_id** | No | `AWS_ACCESS_KEY_ID` | *You can use additional access_key/secret_access_key pairs. Prepend '[another-name]_' to 'aws_access_key_id' and 'aws_secret_access_key' in app.config, and then use '[another-name]' in funtion's field 'aws_access_key_name'* |
+  | **[another]_aws_secret_access_key** | No | `AWS_SECRET_ACCESS_KEY` |  |
+  | **default_region** | Yes | `sa-east-1` | *Default region name to be used when not other explicitly indicated in functions* |
+  | **http_proxy** | No | `http://proxy:80` | *Indicate proxy if necessary* |
+  | **https_proxy** | No | `http://proxy:80` |  |
 
 * **Save** and **Close** the app.config file.
 * [Optional]: Run selftest to test the Integration you configured:
@@ -110,7 +116,7 @@ Resilient Circuits Components for 'fn_aws'
 -->
 * Import the Data Tables and Custom Fields like the screenshot below:
 
-  ![screenshot: custom_layouts](./doc/screenshots/custom_layouts.png)
+  ![screenshot: custom_layouts](./doc/screenshots/addingTables.png)
 
 ---
 
@@ -167,4 +173,4 @@ There are several ways to verify the successful operation of a function.
 ## Support
 | Name | Version | Author | Support URL |
 | ---- | ------- | ------ | ----------- |
-| fn_aws | 1.0.0 | <<your name here>> | <<your company url>> |
+| fn_aws | 1.0.0 | Guido Bernat | https://github.com/gbernat/resilient_fn_AWS |
