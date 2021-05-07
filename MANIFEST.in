@@ -5,5 +5,7 @@ include fn_aws/util/*
 include fn_aws/LICENSE
 include doc/*.md
 include doc/screenshots/*
+include apikey_permissions.txt
 
 exclude *.bak
+exclude fn_aws/util/*.bak

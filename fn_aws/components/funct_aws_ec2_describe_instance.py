@@ -3,9 +3,9 @@
 """Function implementation"""
 
 import logging
+import json
 from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
 from fn_aws.util.helper import AWSHelper
-import json
 
 PACKAGE_NAME = "fn_aws"
 
@@ -48,7 +48,7 @@ class FunctionComponent(ResilientComponent):
 
 
             # Instansiate helper (which gets appconfigs from file)
-            helper = AWSHelper(self.options, aws_access_key_name)    
+            helper = AWSHelper(self.options, aws_access_key_name)
             yield StatusMessage("Appconfig Settings OK")
 
             # Create EC2 client
@@ -62,7 +62,7 @@ class FunctionComponent(ResilientComponent):
 
             # Validate aws_resource_id in case multiple values (must be a list)
             resources = aws_resource_id.split(',')
-            
+
             try:
                 #res = ec2_client.describe_instances(InstanceIds=[resources])
                 res = ec2_client.describe_instances(Filters=[ {'Name': aws_instances_filter_name, 'Values': resources} ])
@@ -76,7 +76,7 @@ class FunctionComponent(ResilientComponent):
 
             except Exception as e:
                 raise ValueError("Cannot get describe_instance.\n Error: {0}".format(e))
-            
+
             ##############################################
 
             yield StatusMessage("Finished 'aws_ec2_describe_instance' that was running in workflow '{0}'".format(wf_instance_id))

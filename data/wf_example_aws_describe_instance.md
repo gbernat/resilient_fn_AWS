@@ -45,7 +45,7 @@ if(results.success):
       row["instance_state"] = inst["State"]["Name"]
       row["vpcid"] = inst["VpcId"]
       row["securitygroups"] = ('\n'.join(list(map(lambda x : x['GroupName']+' ('+x['GroupId']+')', inst["SecurityGroups"]))) if "SecurityGroups" in inst.keys() else '')
-      row["tags"] = ('\n'.join(list(map(lambda x : x['Key']+': '+x['Value'], inst["Tags"]))) if "Tags" in inst.keys() else '')
+      row["instance_tags"] = ('\n'.join(list(map(lambda x : x['Key']+': '+x['Value'], inst["Tags"]))) if "Tags" in inst.keys() else '')
 ```
 
 ---

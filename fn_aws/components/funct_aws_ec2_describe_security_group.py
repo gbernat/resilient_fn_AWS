@@ -3,9 +3,9 @@
 """Function implementation"""
 
 import logging
+import json
 from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
 from fn_aws.util.helper import AWSHelper
-import json
 
 PACKAGE_NAME = "fn_aws"
 
@@ -36,7 +36,7 @@ class FunctionComponent(ResilientComponent):
             # Get the function parameters:
             aws_resource_id = kwargs.get("aws_resource_id")  # text
             aws_region = kwargs.get("aws_region")  # text
-            aws_security_group_filter_name = kwargs.get("aws_security_group_filter_name")['name'] 
+            aws_security_group_filter_name = kwargs.get("aws_security_group_filter_name")['name']
             aws_access_key_name = kwargs.get("aws_access_key_name")  # text
 
             log = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class FunctionComponent(ResilientComponent):
 
 
             # Instansiate helper (which gets appconfigs from file)
-            helper = AWSHelper(self.options, aws_access_key_name)    
+            helper = AWSHelper(self.options, aws_access_key_name)
             yield StatusMessage("Appconfig Settings OK")
 
             # Create EC2 client

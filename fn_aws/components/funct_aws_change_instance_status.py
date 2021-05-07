@@ -3,9 +3,9 @@
 """Function implementation"""
 
 import logging
+import json
 from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
 from fn_aws.util.helper import AWSHelper
-import json
 
 PACKAGE_NAME = "fn_aws"
 
@@ -48,7 +48,7 @@ class FunctionComponent(ResilientComponent):
 
 
             # Instansiate helper (which gets appconfigs from file)
-            helper = AWSHelper(self.options, aws_access_key_name)    
+            helper = AWSHelper(self.options, aws_access_key_name)
             yield StatusMessage("Appconfig Settings OK")
 
             # Create EC2 client
@@ -64,7 +64,7 @@ class FunctionComponent(ResilientComponent):
             resources = aws_resource_id.split(',')
 
             try:
-                if aws_instance_status == 'hibernate' or aws_instance_status == 'stop':
+                if aws_instance_status in ('hibernate', 'stop'):
                     # If hibernate is selected but the instance cannot hibernate successfully, a normal shutdown occurs
                     res = ec2_client.stop_instances(InstanceIds=resources, Hibernate= (True if aws_instance_status=='hibernate' else False))
                 elif aws_instance_status == 'start':

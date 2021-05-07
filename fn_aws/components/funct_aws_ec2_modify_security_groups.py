@@ -5,7 +5,6 @@
 import logging
 from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
 from fn_aws.util.helper import AWSHelper
-import json
 
 PACKAGE_NAME = "fn_aws"
 
@@ -48,7 +47,7 @@ class FunctionComponent(ResilientComponent):
 
 
             # Instansiate helper (which gets appconfigs from file)
-            helper = AWSHelper(self.options, aws_access_key_name)    
+            helper = AWSHelper(self.options, aws_access_key_name)
             yield StatusMessage("Appconfig Settings OK")
 
             # Create EC2 client
@@ -59,7 +58,7 @@ class FunctionComponent(ResilientComponent):
             # TODO Input either by sg id or name (add input select parameter "ids or names")
             # sg_id = ec2_client.describe_security_groups(Filters=[ {'Name': 'group-name', 'Values': ['name_of_sg']} ])['SecurityGroups'][0]['GroupId']
 
-            
+
             ##############################################
             success = False
 

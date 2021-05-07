@@ -3,10 +3,10 @@
 """Function implementation"""
 
 import logging
-from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
-from fn_aws.util.helper import AWSHelper
 import json
 import base64
+from resilient_circuits import ResilientComponent, function, handler, StatusMessage, FunctionResult, FunctionError
+from fn_aws.util.helper import AWSHelper
 
 PACKAGE_NAME = "fn_aws"
 
@@ -49,7 +49,7 @@ class FunctionComponent(ResilientComponent):
 
 
             # Instansiate helper (which gets appconfigs from file)
-            helper = AWSHelper(self.options, aws_access_key_name)    
+            helper = AWSHelper(self.options, aws_access_key_name)
             yield StatusMessage("Appconfig Settings OK")
 
             # Create Lambda client

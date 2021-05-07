@@ -57,7 +57,7 @@ class AWSHelper:
                 region_name = (self.AWS_DEFAULT_REGION if region_name is None or region_name == '' else region_name),
                 aws_access_key_id = self.AWS_ACCESS_KEY_ID,
                 aws_secret_access_key = self.AWS_SECRET_ACCESS_KEY,
-                service_name=service_name, 
+                service_name=service_name,
                 config=botocore.config.Config(proxies=self.HTTP_PROXY))
 
         except botocore.exceptions.ClientError as cli_ex:
@@ -66,9 +66,3 @@ class AWSHelper:
             raise cli_ex
 
         return self.client
-
-
-
-
-
-
